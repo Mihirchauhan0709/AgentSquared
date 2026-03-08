@@ -6,7 +6,7 @@ load_dotenv()
 
 class Settings:
     PROJECT_NAME: str = "Agent Squared"
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./agent_squared.db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./v2_agent_squared.db")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")
@@ -14,6 +14,16 @@ class Settings:
     MAX_FILES_PER_AGENT: int = 5
     MAX_CRAWL_PAGES: int = 20
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
+    # Twitter / X
+    TWITTER_API_KEY: str = os.getenv("TWITTER_API_KEY", "")
+    TWITTER_API_SECRET: str = os.getenv("TWITTER_API_SECRET", "")
+    TWITTER_ACCESS_TOKEN: str = os.getenv("TWITTER_ACCESS_TOKEN", "")
+    TWITTER_ACCESS_TOKEN_SECRET: str = os.getenv("TWITTER_ACCESS_TOKEN_SECRET", "")
+
+    # Bluesky / AT Protocol
+    BLUESKY_HANDLE: str = os.getenv("BLUESKY_HANDLE", "")
+    BLUESKY_PASSWORD: str = os.getenv("BLUESKY_PASSWORD", "")
 
     # Auth
     JWT_SECRET: str = os.getenv("JWT_SECRET", "agent-squared-hackathon-secret-change-me")

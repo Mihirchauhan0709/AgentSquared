@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from db.init_db import init_db
-from routers import agents, upload, chat, auth
+from routers import agents, upload, chat, auth, social
 
 
 @asynccontextmanager
@@ -28,8 +28,8 @@ app = FastAPI(
 # CORS — allow frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "http://localhost:3000"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -39,6 +39,7 @@ app.include_router(auth.router)
 app.include_router(agents.router)
 app.include_router(upload.router)
 app.include_router(chat.router)
+app.include_router(social.router)
 
 
 @app.get("/")

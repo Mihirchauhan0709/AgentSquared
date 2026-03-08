@@ -21,11 +21,23 @@ const TEMPLATE_FIELDS = {
   social_marketing: {
     label: "Social Media Marketing Agent",
     fields: [
+      { name: "bluesky_handle", label: "Bluesky Handle", type: "text", placeholder: "e.g. brand.bsky.social", required: true },
       { name: "audience", label: "Target Audience", type: "text", placeholder: "e.g. B2B SaaS decision-makers" },
       { name: "goals", label: "Marketing Goals", type: "textarea", placeholder: "e.g. Increase brand awareness, drive demo signups" },
       { name: "brand_tone", label: "Brand Tone", type: "text", placeholder: "e.g. bold, witty, thought-leader" },
     ],
     supportsUpload: false,
+    supportsWebsite: false,
+    supportsForum: false,
+  },
+  social_monitor: {
+    label: "Bluesky Social Monitor 🦋",
+    fields: [
+      { name: "bluesky_handle", label: "Bluesky Handle", type: "text", placeholder: "e.g. brand.bsky.social", required: true },
+      { name: "brand_tone", label: "Reply Tone", type: "text", placeholder: "e.g. friendly, professional, witty" },
+      { name: "topics", label: "Topics to Monitor", type: "textarea", placeholder: "e.g. shipping delay, product praise, returns" },
+    ],
+    supportsUpload: true,
     supportsWebsite: false,
     supportsForum: false,
   },
@@ -77,11 +89,15 @@ function BuildFormContent() {
 
     try {
       if (websiteUrl) setLoadingMessage("Crawling your website…");
+      
+      const { bluesky_handle, ...restConfig } = configInput;
+      
       const agent = await createAgent({
         agentType, name, description,
         websiteUrl: websiteUrl || null,
         forumUrl: forumUrl || null,
-        configInput,
+        blueskyHandle: bluesky_handle || null,
+        configInput: restConfig,
       });
 
       if (files.length > 0 && template.supportsUpload) {

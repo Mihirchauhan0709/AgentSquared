@@ -60,7 +60,13 @@ export default function Dashboard() {
           <h1>Dashboard</h1>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <Link href="/build?type=support_qa" className="btn btn-primary">
-              + New Agent
+              + Support Agent
+            </Link>
+            <Link href="/build?type=social_monitor" className="btn btn-primary" style={{ background: 'var(--brand-bluesky, #0a7ea4)' }}>
+              + Social Monitor
+            </Link>
+            <Link href="/build?type=social_marketing" className="btn btn-primary" style={{ background: '#d946ef' }}>
+              + Social Marketing
             </Link>
             <button onClick={handleLogout} className="btn btn-ghost" style={{ fontSize: "0.85rem" }}>
               Log out
@@ -103,9 +109,17 @@ export default function Dashboard() {
             <div style={{ fontSize: "3rem", marginBottom: 8 }}>🤖</div>
             <h3>No agents yet</h3>
             <p>Create your first AI support agent to get started.</p>
-            <Link href="/build?type=support_qa" className="btn btn-primary">
-              Create Support Agent →
-            </Link>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+              <Link href="/build?type=support_qa" className="btn btn-primary">
+                Create Support Agent →
+              </Link>
+              <Link href="/build?type=social_monitor" className="btn btn-primary" style={{ background: 'var(--brand-bluesky, #0a7ea4)' }}>
+                Create Social Monitor →
+              </Link>
+              <Link href="/build?type=social_marketing" className="btn btn-primary" style={{ background: '#d946ef' }}>
+                Create Social Marketing →
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="agents-table">
@@ -146,12 +160,16 @@ export default function Dashboard() {
                     </td>
                     <td>
                       <span className="agent-type-badge">
-                        {agent.agent_type === "support_qa" ? "💬 Support" : "📣 Marketing"}
+                        {agent.agent_type === "support_qa" ? "💬 Support" : agent.agent_type === "social_monitor" ? "🦋 Social Monitor" : "📣 Marketing"}
                       </span>
                     </td>
                     <td>
                       <div className="action-buttons">
-                        <Link href={`/a/${agent.slug}`} className="action-btn" title="Open">
+                        <Link 
+                          href={agent.agent_type === "social_monitor" ? `/social/${agent.slug}` : `/a/${agent.slug}`} 
+                          className="action-btn" 
+                          title="Open"
+                        >
                           ↗
                         </Link>
                         <button className="action-btn" onClick={() => copyUrl(agent.slug)} title="Copy URL">

@@ -20,6 +20,8 @@ from schemas.agent import ChatRequest, ChatMessageResponse
 from services.gemini_chat import chat_with_agent
 from services.knowledge import retrieve_knowledge
 from services.forum_action import answer_forum_questions, format_report
+from services.social_monitor import scan_and_classify_mentions, format_scan_report
+from db.models import SocialMention
 
 router = APIRouter(prefix="/api", tags=["chat"])
 
@@ -36,11 +38,37 @@ FORUM_ACTION_PATTERNS = [
     r"forum",
 ]
 
+SOCIAL_MONITOR_PATTERNS = [
+    r"check.*(mention|tweet|social)",
+    r"scan.*(mention|tweet|social)",
+    r"(mention|tweet)s?",
+    r"social.*(media|monitor|scan)",
+    r"what.*(people|customers|saying)",
+    r"monitor",
+]
+
+MARKETING_ACTION_PATTERNS = [
+    r"(create|make|write|generate|draft).*(post|tweet|content|update|message)",
+    r"post.*about",
+]
 
 def _is_forum_action(message: str) -> bool:
     """Check if the user message is a forum action command."""
     msg = message.lower().strip()
     return any(re.search(pattern, msg) for pattern in FORUM_ACTION_PATTERNS)
+
+
+def _is_social_action(message: str) -> bool:
+    """Check if the user message is a social monitor command."""
+    msg = message.lower().strip()
+    return any(re.search(pattern, msg) for pattern in SOCIAL_MONITOR_PATTERNS)
+
+def _is_marketing_action(message: str, has_image: bool = False) -> bool:
+    """Check if the user message is a marketing post command."""
+    if has_image:
+        return True
+    msg = message.lower().strip()
+    return any(re.search(pattern, msg) for pattern in MARKETING_ACTION_PATTERNS)
 
 
 @router.post("/agents/{slug}/chat")
@@ -79,7 +107,6 @@ async def chat(slug: str, req: ChatRequest, db: Session = Depends(get_db)):
             print(f"Forum action error: {e}")
             response_text = f"⚠️ I tried to access your forum but ran into an error: {str(e)[:200]}"
 
-        # Save assistant response
         assistant_msg = ChatMessage(
             id=str(uuid.uuid4()),
             agent_id=agent.id,
@@ -91,12 +118,93 @@ async def chat(slug: str, req: ChatRequest, db: Session = Depends(get_db)):
         db.commit()
         return {"response": response_text, "session_id": req.session_id}
 
-    # ── Normal Chat Flow ────────────────────────────────────────
+    # ── Social Monitor Action Detection ─────────────────────────
+    if _is_social_action(req.message) and agent.agent_type == "social_monitor":
+        try:
+            from services.knowledge import retrieve_knowledge as _rk
+            knowledge_context = _rk(db, agent.id, "")
+            report = await scan_and_classify_mentions(
+                db=db,
+                agent_id=agent.id,
+                agent_name=agent.name,
+                bluesky_handle=agent.bluesky_handle or agent.name,
+                knowledge_context=knowledge_context,
+            )
+            response_text = format_scan_report(report)
+        except Exception as e:
+            print(f"Social monitor error: {e}")
+            response_text = f"⚠️ I tried to scan your mentions but ran into an error: {str(e)[:200]}"
+
+        assistant_msg = ChatMessage(
+            id=str(uuid.uuid4()),
+            agent_id=agent.id,
+            session_id=req.session_id,
+            role="assistant",
+            content=response_text,
+        )
+        db.add(assistant_msg)
+        db.commit()
+        return {"response": response_text, "session_id": req.session_id}
+
+    # ── Social Marketing Action Detection ─────────────────────────
+    if _is_marketing_action(req.message, bool(req.image)) and agent.agent_type == "social_marketing":
+        try:
+            from services.knowledge import retrieve_knowledge as _rk
+            from services.social_marketing import generate_and_post_marketing_content
+            
+            knowledge_context = _rk(db, agent.id, req.message)
+            config_context = agent.config_input or ""
+            full_context = f"{config_context}\n\n{knowledge_context}"
+            
+            result = await generate_and_post_marketing_content(
+                agent_name=agent.name,
+                topic=req.message,
+                knowledge_context=full_context,
+                custom_image_b64=req.image
+            )
+            
+            if result.get("success"):
+                response_text = f"✅ Successfully generated and posted to Bluesky!\n\n**Post Text:**\n{result['post_text']}\n\n![Generated Image]({result['preview_url']})"
+            else:
+                response_text = f"⚠️ I generated the content but hit an error posting to Bluesky: {result.get('error')}\n\n**Post Text:**\n{result.get('post_text', 'N/A')}\n\n![Generated Image]({result.get('preview_url', '')})"
+                
+        except Exception as e:
+            print(f"Social marketing error: {e}")
+            response_text = f"⚠️ I tried to generate and post your content but ran into an error: {str(e)[:200]}"
+
+        assistant_msg = ChatMessage(
+            id=str(uuid.uuid4()),
+            agent_id=agent.id,
+            session_id=req.session_id,
+            role="assistant",
+            content=response_text,
+        )
+        db.add(assistant_msg)
+        db.commit()
+        return {"response": response_text, "session_id": req.session_id}
+
     # Retrieve knowledge context
     knowledge_context = ""
     knowledge_strategy = spec.get("knowledge_config", {}).get("strategy", "")
     if knowledge_strategy == "rag":
         knowledge_context = retrieve_knowledge(db, agent.id, req.message)
+
+    # For social_monitor agents, also pull in the most recent real mentions
+    if agent.agent_type == "social_monitor":
+        recent_mentions = (
+            db.query(SocialMention)
+            .filter(SocialMention.agent_id == agent.id)
+            .order_by(SocialMention.created_at.desc())
+            .limit(10)
+            .all()
+        )
+        if recent_mentions:
+            mentions_text = "\nRECENT SOCIAL MEDIA MENTIONS (Bluesky):\n---\n"
+            for m in recent_mentions:
+                date_str = m.created_at.strftime("%Y-%m-%d %H:%M")
+                mentions_text += f"- [{date_str}] @{m.author_handle.lstrip('@')}: \"{m.text}\" (Sentiment: {m.sentiment})\n"
+            mentions_text += "---\n"
+            knowledge_context = mentions_text + knowledge_context
 
     # Load chat history
     history_records = (
