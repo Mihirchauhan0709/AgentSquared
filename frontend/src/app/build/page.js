@@ -41,6 +41,9 @@ function BuildFormContent() {
   const [description, setDescription] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [forumUrl, setForumUrl] = useState("");
+  const [forumType, setForumType] = useState("auto");
+  const [forumEmail, setForumEmail] = useState("");
+  const [forumPassword, setForumPassword] = useState("");
   const [configInput, setConfigInput] = useState({});
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -81,6 +84,9 @@ function BuildFormContent() {
         agentType, name, description,
         websiteUrl: websiteUrl || null,
         forumUrl: forumUrl || null,
+        forumType: forumUrl ? forumType : null,
+        forumEmail: forumUrl ? (forumEmail || null) : null,
+        forumPassword: forumUrl ? (forumPassword || null) : null,
         configInput,
       });
 
@@ -109,9 +115,9 @@ function BuildFormContent() {
       )}
 
       {/* Nav */}
-      <nav className="navbar">
+      <nav className="navbar" style={{ borderBottom: "1px solid var(--border)" }}>
         <Link href="/" className="navbar-logo">
-          <span className="logo-icon">A²</span>
+          <img src="/logo.png" className="logo-icon" alt="Agent Squared Logo" />
           Agent Squared
         </Link>
         <div className="navbar-actions">
@@ -171,6 +177,46 @@ function BuildFormContent() {
                   <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: 4 }}>
                     Your agent can auto-answer unanswered questions on your forum
                   </p>
+
+                  {/* Show credential fields when forum URL is entered */}
+                  {forumUrl && (
+                    <div style={{ marginTop: 16, padding: 16, background: "var(--bg-surface)", borderRadius: 8, border: "1px solid var(--border)" }}>
+                      <div className="form-group" style={{ marginBottom: 12 }}>
+                        <label className="form-label">Forum Type</label>
+                        <select
+                          className="form-input"
+                          value={forumType}
+                          onChange={(e) => setForumType(e.target.value)}
+                          style={{ height: 44 }}
+                        >
+                          <option value="auto">Auto-detect</option>
+                          <option value="discourse">Discourse</option>
+                          <option value="custom">Custom / Other</option>
+                        </select>
+                      </div>
+                      <div className="form-group" style={{ marginBottom: 12 }}>
+                        <label className="form-label">Forum Login Email</label>
+                        <input
+                          className="form-input" type="email"
+                          placeholder="agent@yourcompany.com"
+                          value={forumEmail}
+                          onChange={(e) => setForumEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">Forum Login Password</label>
+                        <input
+                          className="form-input" type="password"
+                          placeholder="Forum account password"
+                          value={forumPassword}
+                          onChange={(e) => setForumPassword(e.target.value)}
+                        />
+                      </div>
+                      <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 8 }}>
+                        🔒 Credentials are stored securely and used only by your agent
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 

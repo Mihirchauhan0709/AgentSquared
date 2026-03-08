@@ -73,7 +73,7 @@ export async function getTemplates() {
 
 // ── Agents ──────────────────────────────────────────────────
 
-export async function createAgent({ agentType, name, description, websiteUrl, forumUrl, configInput }) {
+export async function createAgent({ agentType, name, description, websiteUrl, forumUrl, forumType, forumEmail, forumPassword, configInput }) {
   const res = await fetch(`${API_BASE}/agents`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders() },
@@ -83,6 +83,9 @@ export async function createAgent({ agentType, name, description, websiteUrl, fo
       description,
       website_url: websiteUrl || null,
       forum_url: forumUrl || null,
+      forum_type: forumType || null,
+      forum_email: forumEmail || null,
+      forum_password: forumPassword || null,
       config_input: configInput,
     }),
   });
@@ -117,6 +120,32 @@ export async function uploadFiles(agentId, files) {
 export async function getAgent(slug) {
   const res = await fetch(`${API_BASE}/agents/${slug}`);
   if (!res.ok) throw new Error("Agent not found");
+  return res.json();
+}
+
+export async function listKnowledgeFiles(agentId) {
+  const res = await fetch(`${API_BASE}/agents/${agentId}/knowledge`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to fetch knowledge files");
+  return res.json();
+}
+
+export async function deleteKnowledgeFile(agentId, fileId) {
+  const res = await fetch(`${API_BASE}/agents/${agentId}/knowledge/${fileId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to delete file");
+  return res.json();
+}
+
+export async function deleteAgent(agentId) {
+  const res = await fetch(`${API_BASE}/agents/${agentId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to delete agent");
   return res.json();
 }
 

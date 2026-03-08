@@ -37,6 +37,8 @@ class Agent(Base):
     agent_type = Column(Text, nullable=False)  # support_qa | social_marketing
     website_url = Column(Text, nullable=True)  # Company website to crawl
     forum_url = Column(Text, nullable=True)  # Company forum for auto-answering
+    forum_type = Column(Text, nullable=True)  # auto | discourse | custom
+    forum_credentials = Column(Text, nullable=True)  # JSON: {"email": ..., "password": ...}
     description = Column(Text, nullable=False)
     config_input = Column(Text, nullable=True)  # JSON — raw form inputs
     spec = Column(Text, nullable=True)  # JSON — Gemini-generated agent spec

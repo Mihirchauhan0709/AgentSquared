@@ -28,9 +28,9 @@ export default function Login() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <Link href="/" className="navbar-logo" style={{ justifyContent: "center" }}>
-            <span className="logo-icon">A²</span>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <Link href="/" className="navbar-logo" style={{ justifyContent: "center", marginBottom: 16 }}>
+            <img src="/logo.png" className="logo-icon" alt="Agent Squared Logo" />
             Agent Squared
           </Link>
         </div>

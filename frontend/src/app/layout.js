@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./style.css";
 
 export const metadata = {
   title: "Agent Squared — Create AI Agents in 60 Seconds",

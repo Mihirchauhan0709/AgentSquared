@@ -73,6 +73,8 @@ async def chat(slug: str, req: ChatRequest, db: Session = Depends(get_db)):
                 agent_id=agent.id,
                 agent_name=agent.name,
                 forum_url=agent.forum_url,
+                forum_type=agent.forum_type or "auto",
+                forum_credentials=agent.forum_credentials,
             )
             response_text = format_report(report)
         except Exception as e:

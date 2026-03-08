@@ -15,6 +15,9 @@ class CreateAgentRequest(BaseModel):
     description: str = Field(..., min_length=1)
     website_url: Optional[str] = None
     forum_url: Optional[str] = None
+    forum_type: Optional[str] = None  # auto | discourse | custom
+    forum_email: Optional[str] = None
+    forum_password: Optional[str] = None
     config_input: dict = Field(default_factory=dict)
 
 
@@ -34,6 +37,7 @@ class AgentResponse(BaseModel):
     description: str
     website_url: Optional[str] = None
     forum_url: Optional[str] = None
+    forum_type: Optional[str] = None
     config_input: Optional[dict] = None
     spec: Optional[dict] = None
     status: str

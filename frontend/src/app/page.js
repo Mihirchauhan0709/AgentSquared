@@ -19,12 +19,14 @@ export default function Home() {
     setCompany("");
   };
 
+  const [showMenu, setShowMenu] = useState(false);
+
   return (
     <div className="page">
       {/* ── Navbar ────────────────────────────────────── */}
       <nav className="navbar">
         <Link href="/" className="navbar-logo">
-          <span className="logo-icon">A²</span>
+          <img src="/logo.png" className="logo-icon" alt="Agent Squared Logo" />
           Agent Squared
         </Link>
         <ul className="navbar-links">
@@ -34,10 +36,40 @@ export default function Home() {
         </ul>
         <div className="navbar-actions">
           {loggedIn ? (
-            <>
-              <Link href="/dashboard" className="btn btn-ghost">Dashboard</Link>
-              <button onClick={handleLogout} className="btn btn-secondary">Log out</button>
-            </>
+            <div className="user-menu-wrapper">
+              <button
+                className="user-avatar-btn"
+                onClick={() => setShowMenu(!showMenu)}
+                aria-label="User menu"
+              >
+                {company.charAt(0).toUpperCase() || "U"}
+              </button>
+              {showMenu && (
+                <>
+                  <div className="user-menu-overlay" onClick={() => setShowMenu(false)} />
+                  <div className="user-menu">
+                    <div className="user-menu-header">
+                      <div className="user-menu-name">{company || "My Account"}</div>
+                      <div className="user-menu-email">Pro Plan</div>
+                    </div>
+                    <div className="user-menu-divider" />
+                    <Link href="/dashboard" className="user-menu-item" onClick={() => setShowMenu(false)}>
+                      📊 Dashboard
+                    </Link>
+                    <Link href="/build?type=support_qa" className="user-menu-item" onClick={() => setShowMenu(false)}>
+                      🤖 Build Agent
+                    </Link>
+                    <div className="user-menu-divider" />
+                    <button
+                      className="user-menu-item user-menu-logout"
+                      onClick={() => { handleLogout(); setShowMenu(false); }}
+                    >
+                      🚪 Log out
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           ) : (
             <>
               <Link href="/login" className="btn btn-ghost">Log in</Link>

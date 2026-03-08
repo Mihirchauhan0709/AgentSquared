@@ -52,7 +52,15 @@ html, body {
   color: var(--text);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
 }
+
+/* Fade-in for content transitions */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.dashboard-main > * { animation: fadeIn 0.25s ease-out; }
 
 a { color: var(--primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -154,10 +162,7 @@ h3 { font-size: 1.25rem; font-weight: 600; }
 .navbar-logo:hover { text-decoration: none; }
 
 .navbar-logo .logo-icon {
-  width: 32px; height: 32px; background: var(--primary);
-  border-radius: var(--radius-sm); display: flex;
-  align-items: center; justify-content: center;
-  color: white; font-weight: 700; font-size: 0.8rem;
+  height: 32px; width: auto; object-fit: contain;
 }
 
 .navbar-links {
@@ -171,6 +176,55 @@ h3 { font-size: 1.25rem; font-weight: 600; }
 .navbar-links a:hover { color: var(--text); text-decoration: none; }
 
 .navbar-actions { display: flex; align-items: center; gap: 12px; }
+
+/* ── User avatar dropdown ────────────────────── */
+
+.user-menu-wrapper { position: relative; }
+
+.user-avatar-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--primary); color: white;
+  border: 2px solid transparent; cursor: pointer;
+  font-weight: 700; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.user-avatar-btn:hover {
+  border-color: var(--primary-hover);
+  box-shadow: 0 0 0 3px rgba(55, 19, 236, 0.15);
+}
+
+.user-menu-overlay {
+  position: fixed; inset: 0; z-index: 99;
+}
+
+.user-menu {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: 220px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg); z-index: 100;
+  padding: 6px 0; animation: fadeIn 0.15s ease-out;
+}
+
+.user-menu-header {
+  padding: 12px 16px;
+}
+.user-menu-name { font-weight: 700; font-size: 0.9rem; }
+.user-menu-email { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+.user-menu-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+.user-menu-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; font-size: 0.85rem; color: var(--text);
+  cursor: pointer; transition: background var(--transition);
+  text-decoration: none; width: 100%;
+  background: none; border: none; font-family: inherit;
+}
+.user-menu-item:hover { background: var(--bg-surface); text-decoration: none; }
+
+.user-menu-logout { color: var(--error); }
+.user-menu-logout:hover { background: var(--error-bg); }
 
 /* ═══════════════════════════════════════════════════════════
    HERO SECTION
@@ -421,10 +475,7 @@ h3 { font-size: 1.25rem; font-weight: 600; }
 }
 .sidebar-logo:hover { text-decoration: none; }
 .sidebar-logo .logo-icon {
-  width: 36px; height: 36px; background: var(--primary);
-  border-radius: var(--radius-sm); display: flex;
-  align-items: center; justify-content: center;
-  color: white; font-weight: 700; font-size: 0.85rem;
+  height: 28px; width: auto; object-fit: contain;
 }
 
 .sidebar-nav { list-style: none; flex: 1; }
@@ -440,7 +491,7 @@ h3 { font-size: 1.25rem; font-weight: 600; }
 .sidebar-nav a:hover, .sidebar-nav button:hover {
   background: var(--bg-surface); color: var(--text); text-decoration: none;
 }
-.sidebar-nav a.active {
+.sidebar-nav a.active, .sidebar-nav button.active {
   background: var(--primary-light); color: var(--primary); font-weight: 600;
 }
 
@@ -710,6 +761,15 @@ h3 { font-size: 1.25rem; font-weight: 600; }
   0%, 80%, 100% { transform: translateY(0); }
   40% { transform: translateY(-8px); }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   EMBED MODE (widget iframe)
+   ═══════════════════════════════════════════════════════════ */
+
+.workspace-embed { border-radius: 16px; overflow: hidden; }
+.workspace-embed .chat-sidebar { display: none; }
+.workspace-embed .workspace-header { border-radius: 16px 16px 0 0; }
+.workspace-embed .chat-footer { border-radius: 0 0 16px 16px; }
 
 /* ═══════════════════════════════════════════════════════════
    RESPONSIVE

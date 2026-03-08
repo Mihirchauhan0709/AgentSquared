@@ -9,12 +9,13 @@ from sqlalchemy.orm import Session
 from slugify import slugify
 
 from db.database import get_db
-from db.models import Agent, Company
+from db.models import Agent, Company, KnowledgeFile
 from schemas.agent import (
     CreateAgentRequest,
     AgentResponse,
     AgentPublicResponse,
     AgentListItem,
+    KnowledgeFileResponse,
 )
 from services.gemini_spec import generate_agent_spec
 from services.crawler import crawl_website
@@ -52,6 +53,11 @@ async def create_agent(
     if db.query(Agent).filter(Agent.slug == slug).first():
         slug = f"{base_slug}-{uuid.uuid4().hex[:4]}"
 
+    # Build forum credentials JSON if provided
+    forum_creds = None
+    if req.forum_email and req.forum_password:
+        forum_creds = json.dumps({"email": req.forum_email, "password": req.forum_password})
+
     # Create agent record (status=building)
     agent = Agent(
         id=str(uuid.uuid4()),
@@ -61,6 +67,8 @@ async def create_agent(
         agent_type=req.agent_type,
         website_url=req.website_url,
         forum_url=req.forum_url,
+        forum_type=req.forum_type or "auto",
+        forum_credentials=forum_creds,
         description=req.description,
         config_input=json.dumps(req.config_input),
         status="building",
@@ -168,3 +176,58 @@ async def get_agent(slug: str, db: Session = Depends(get_db)):
         status=agent.status,
         has_knowledge=has_knowledge,
     )
+
+
+@router.get("/agents/{agent_id}/knowledge", response_model=list[KnowledgeFileResponse])
+async def list_knowledge_files(
+    agent_id: str,
+    db: Session = Depends(get_db),
+    company: Company = Depends(get_current_company),
+):
+    """List all knowledge files for an agent."""
+    agent = db.query(Agent).filter(Agent.id == agent_id, Agent.company_id == company.id).first()
+    if not agent:
+        raise HTTPException(404, "Agent not found")
+    return agent.knowledge_files
+
+
+@router.delete("/agents/{agent_id}/knowledge/{file_id}")
+async def delete_knowledge_file(
+    agent_id: str,
+    file_id: str,
+    db: Session = Depends(get_db),
+    company: Company = Depends(get_current_company),
+):
+    """Delete a knowledge file from an agent."""
+    agent = db.query(Agent).filter(Agent.id == agent_id, Agent.company_id == company.id).first()
+    if not agent:
+        raise HTTPException(404, "Agent not found")
+
+    kf = db.query(KnowledgeFile).filter(
+        KnowledgeFile.id == file_id,
+        KnowledgeFile.agent_id == agent_id,
+    ).first()
+    if not kf:
+        raise HTTPException(404, "Knowledge file not found")
+
+    db.delete(kf)
+    db.commit()
+    return {"ok": True, "deleted": file_id}
+
+
+@router.delete("/agents/{agent_id}")
+async def delete_agent(
+    agent_id: str,
+    db: Session = Depends(get_db),
+    company: Company = Depends(get_current_company),
+):
+    """Delete an agent and all its knowledge files."""
+    agent = db.query(Agent).filter(Agent.id == agent_id, Agent.company_id == company.id).first()
+    if not agent:
+        raise HTTPException(404, "Agent not found")
+
+    # Delete all knowledge files first
+    db.query(KnowledgeFile).filter(KnowledgeFile.agent_id == agent_id).delete()
+    db.delete(agent)
+    db.commit()
+    return {"ok": True, "deleted": agent_id}
