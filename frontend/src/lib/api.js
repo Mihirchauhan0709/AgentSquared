@@ -73,7 +73,7 @@ export async function getTemplates() {
 
 // ── Agents ──────────────────────────────────────────────────
 
-export async function createAgent({ agentType, name, description, websiteUrl, forumUrl, forumType, forumEmail, forumPassword, configInput }) {
+export async function createAgent({ agentType, name, description, websiteUrl, forumUrl, forumType, forumEmail, forumPassword, blueskyHandle, configInput }) {
   const res = await fetch(`${API_BASE}/agents`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders() },
@@ -86,6 +86,7 @@ export async function createAgent({ agentType, name, description, websiteUrl, fo
       forum_type: forumType || null,
       forum_email: forumEmail || null,
       forum_password: forumPassword || null,
+      bluesky_handle: blueskyHandle || null,
       config_input: configInput,
     }),
   });
@@ -151,11 +152,11 @@ export async function deleteAgent(agentId) {
 
 // ── Chat ────────────────────────────────────────────────────
 
-export async function sendMessage(slug, message, sessionId) {
+export async function sendMessage(slug, message, sessionId, image = null) {
   const res = await fetch(`${API_BASE}/agents/${slug}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, session_id: sessionId }),
+    body: JSON.stringify({ message, session_id: sessionId, image }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -167,5 +168,32 @@ export async function sendMessage(slug, message, sessionId) {
 export async function getChatHistory(slug, sessionId) {
   const res = await fetch(`${API_BASE}/agents/${slug}/history/${sessionId}`);
   if (!res.ok) throw new Error("Failed to fetch history");
+  return res.json();
+}
+
+// ── Social Monitor ───────────────────────────────────
+
+export async function scanSocialMentions(slug) {
+  const res = await fetch(`${API_BASE}/agents/${slug}/social/scan`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to scan mentions");
+  return res.json();
+}
+
+export async function getSocialMentions(slug) {
+  const res = await fetch(`${API_BASE}/agents/${slug}/social/mentions`);
+  if (!res.ok) throw new Error("Failed to fetch mentions");
+  return res.json();
+}
+
+export async function updateMentionStatus(slug, mentionId, status) {
+  const res = await fetch(`${API_BASE}/agents/${slug}/social/mentions/${mentionId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error("Failed to update mention");
   return res.json();
 }

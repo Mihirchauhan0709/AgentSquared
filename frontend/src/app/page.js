@@ -90,7 +90,7 @@ export default function Home() {
           Empower your business with an intelligent assistant that handles customer queries 24/7 without writing a single line of code.
         </p>
         <div className="hero-buttons">
-          <Link href={loggedIn ? "/build?type=support_qa" : "/signup"} className="btn btn-primary">
+          <Link href={loggedIn ? "/dashboard" : "/signup"} className="btn btn-primary">
             Get Started Free →
           </Link>
           <a href="#how-it-works" className="btn btn-secondary">
@@ -163,7 +163,7 @@ export default function Home() {
             <li><span className="check-icon">✓</span> Multilingual support (50+ languages)</li>
             <li><span className="check-icon">✓</span> Forum auto-answer integration</li>
           </ul>
-          <Link href={loggedIn ? "/build?type=support_qa" : "/signup"} className="btn btn-primary">
+          <Link href={loggedIn ? "/dashboard" : "/signup"} className="btn btn-primary">
             Get Started Free →
           </Link>
           <p style={{ fontSize: "0.8rem", marginTop: 12, opacity: 0.7 }}>No credit card required to start.</p>

@@ -1,5 +1,5 @@
 from db.database import engine, Base
-from db.models import Agent, KnowledgeFile, ChatMessage  # noqa: F401 — import to register models
+from db.models import Agent, KnowledgeFile, ChatMessage, SocialMention  # noqa: F401 — import to register models
 
 
 def init_db():

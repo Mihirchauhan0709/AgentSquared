@@ -34,8 +34,9 @@ class Agent(Base):
     company_id = Column(Text, ForeignKey("companies.id"), nullable=False)
     slug = Column(Text, unique=True, nullable=False, index=True)
     name = Column(Text, nullable=False)
-    agent_type = Column(Text, nullable=False)  # support_qa | social_marketing
+    agent_type = Column(Text, nullable=False)  # support_qa | social_marketing | social_monitor
     website_url = Column(Text, nullable=True)  # Company website to crawl
+    bluesky_handle = Column(Text, nullable=True)  # e.g. brand.bsky.social
     forum_url = Column(Text, nullable=True)  # Company forum for auto-answering
     forum_type = Column(Text, nullable=True)  # auto | discourse | custom
     forum_credentials = Column(Text, nullable=True)  # JSON: {"email": ..., "password": ...}
@@ -48,6 +49,7 @@ class Agent(Base):
     company = relationship("Company", back_populates="agents")
     knowledge_files = relationship("KnowledgeFile", back_populates="agent", cascade="all, delete-orphan")
     chat_messages = relationship("ChatMessage", back_populates="agent", cascade="all, delete-orphan")
+    social_mentions = relationship("SocialMention", back_populates="agent", cascade="all, delete-orphan")
 
 
 class KnowledgeFile(Base):
@@ -76,3 +78,28 @@ class ChatMessage(Base):
     created_at = Column(DateTime, default=_now)
 
     agent = relationship("Agent", back_populates="chat_messages")
+
+
+class SocialMention(Base):
+    __tablename__ = "social_mentions"
+
+    id = Column(Text, primary_key=True, default=_uuid)
+    agent_id = Column(Text, ForeignKey("agents.id"), nullable=False)
+    platform = Column(Text, nullable=False, default="twitter")  # twitter | instagram | etc.
+    author = Column(Text, nullable=False)       # Display name
+    author_handle = Column(Text, nullable=False)  # @handle
+    text = Column(Text, nullable=False)         # The tweet/post text
+    sentiment = Column(Text, nullable=True)     # complaint | question | praise | spam
+    suggested_reply = Column(Text, nullable=True)
+    status = Column(Text, nullable=False, default="pending")  # pending | approved | ignored
+    
+    # Platform-specific IDs for real-time replies
+    external_id = Column(Text, nullable=True) # tweet_id or bluesky_uri
+    post_cid = Column(Text, nullable=True)     # For Bluesky
+    post_uri = Column(Text, nullable=True)     # For Bluesky
+    root_cid = Column(Text, nullable=True)     # Thread root
+    root_uri = Column(Text, nullable=True)     # Thread root
+    
+    created_at = Column(DateTime, default=_now)
+
+    agent = relationship("Agent", back_populates="social_mentions")

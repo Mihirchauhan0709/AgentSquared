@@ -6,27 +6,26 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-# ── Request models ──────────────────────────────────────────────
+# --- Request models ---
 
 
 class CreateAgentRequest(BaseModel):
-    agent_type: str = Field(..., pattern="^(support_qa|social_marketing)$")
+    agent_type: str = Field(..., pattern="^(support_qa|social_marketing|social_monitor)$")
     name: str = Field(..., min_length=1, max_length=100)
     description: str = Field(..., min_length=1)
     website_url: Optional[str] = None
     forum_url: Optional[str] = None
-    forum_type: Optional[str] = None  # auto | discourse | custom
-    forum_email: Optional[str] = None
-    forum_password: Optional[str] = None
+    bluesky_handle: Optional[str] = None
     config_input: dict = Field(default_factory=dict)
 
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1)
     session_id: str = Field(..., min_length=1)
+    image: Optional[str] = None  # Base64 encoded image data
 
 
-# ── Response models ─────────────────────────────────────────────
+# --- Response models ---
 
 
 class AgentResponse(BaseModel):
@@ -37,7 +36,7 @@ class AgentResponse(BaseModel):
     description: str
     website_url: Optional[str] = None
     forum_url: Optional[str] = None
-    forum_type: Optional[str] = None
+    bluesky_handle: Optional[str] = None
     config_input: Optional[dict] = None
     spec: Optional[dict] = None
     status: str
@@ -60,7 +59,7 @@ class AgentListItem(BaseModel):
 
 
 class AgentPublicResponse(BaseModel):
-    """What the workspace page loads — no internal IDs."""
+    """What the workspace page loads - no internal IDs."""
     slug: str
     name: str
     agent_type: str
@@ -90,11 +89,30 @@ class ChatMessageResponse(BaseModel):
         from_attributes = True
 
 
+class SocialMentionResponse(BaseModel):
+    id: str
+    platform: str
+    author: str
+    author_handle: str
+    text: str
+    sentiment: Optional[str] = None
+    suggested_reply: Optional[str] = None
+    status: str
+    post_cid: Optional[str] = None
+    post_uri: Optional[str] = None
+    root_cid: Optional[str] = None
+    root_uri: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class TemplateInfo(BaseModel):
     agent_type: str
     label: str
     description: str
-    fields: list[TemplateField]
+    fields: list["TemplateField"]
 
 
 class TemplateField(BaseModel):
