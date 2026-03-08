@@ -99,15 +99,11 @@ function BuildFormContent() {
         agentType, name, description,
         websiteUrl: websiteUrl || null,
         forumUrl: forumUrl || null,
-<<<<<<< HEAD
         forumType: forumUrl ? forumType : null,
         forumEmail: forumUrl ? (forumEmail || null) : null,
         forumPassword: forumUrl ? (forumPassword || null) : null,
-        configInput,
-=======
         blueskyHandle: bluesky_handle || null,
         configInput: restConfig,
->>>>>>> teammate-base
       });
 
       if (files.length > 0 && template.supportsUpload) {
