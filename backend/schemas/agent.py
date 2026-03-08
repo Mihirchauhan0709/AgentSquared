@@ -15,6 +15,9 @@ class CreateAgentRequest(BaseModel):
     description: str = Field(..., min_length=1)
     website_url: Optional[str] = None
     forum_url: Optional[str] = None
+    forum_type: Optional[str] = None
+    forum_email: Optional[str] = None
+    forum_password: Optional[str] = None
     bluesky_handle: Optional[str] = None
     config_input: dict = Field(default_factory=dict)
 
