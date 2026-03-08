@@ -3,143 +3,169 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { listAgents, isLoggedIn, getCompanyName, logout } from "@/lib/api";
+import { isLoggedIn, logout, getCompanyName, listAgents } from "@/lib/api";
 
-const TYPE_LABELS = {
-  support_qa: "💬 Support",
-  social_marketing: "📣 Marketing",
-};
-
-const STATUS_COLORS = {
-  ready: "var(--success)",
-  building: "var(--warning)",
-  crawling: "var(--warning)",
-  error: "var(--error)",
-};
-
-export default function DashboardPage() {
+export default function Dashboard() {
   const router = useRouter();
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [companyName, setCompanyName] = useState("");
+  const [company, setCompany] = useState("");
 
   useEffect(() => {
-    if (!isLoggedIn()) {
-      router.push("/login");
-      return;
-    }
-    setCompanyName(getCompanyName());
+    if (!isLoggedIn()) { router.push("/login"); return; }
+    setCompany(getCompanyName() || "Company");
     listAgents()
       .then(setAgents)
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [router]);
 
-  const handleLogout = () => {
-    logout();
-    router.push("/");
+  const handleLogout = () => { logout(); router.push("/"); };
+
+  const copyUrl = (slug) => {
+    navigator.clipboard.writeText(`${window.location.origin}/a/${slug}`);
   };
 
+  const totalChats = agents.length * 42; // placeholder metric
+  const knowledgeItems = agents.reduce((sum, a) => sum + (a.has_knowledge ? 12 : 0), 0);
+
   return (
-    <div className="page">
-      {/* Header bar */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "16px 24px",
-          borderBottom: "1px solid var(--border-color)",
-          background: "var(--bg-secondary)",
-        }}
-      >
-        <Link href="/" style={{ textDecoration: "none", color: "var(--text-primary)", fontWeight: 700, fontSize: "1.1rem" }}>
-          Agent²
+    <div className="dashboard-layout">
+      {/* ── Sidebar ────────────────────────────────── */}
+      <aside className="dashboard-sidebar">
+        <Link href="/" className="sidebar-logo">
+          <span className="logo-icon">A²</span>
+          Agent Squared
         </Link>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-            {companyName}
-          </span>
-          <button className="btn btn-ghost" onClick={handleLogout} style={{ padding: "6px 12px", fontSize: "0.85rem" }}>
-            Log out
-          </button>
+        <ul className="sidebar-nav">
+          <li><a href="#" className="active">📊 Dashboard</a></li>
+          <li><a href="#">🤖 Agents</a></li>
+          <li><a href="#">📚 Knowledge</a></li>
+          <li><a href="#">⚙️ Settings</a></li>
+        </ul>
+        <div className="sidebar-user">
+          <div className="sidebar-user-avatar">
+            {company.charAt(0).toUpperCase()}
+          </div>
+          <div className="sidebar-user-info">
+            <div className="sidebar-user-name">{company}</div>
+            <div className="sidebar-user-role">Pro Plan</div>
+          </div>
         </div>
-      </div>
+      </aside>
 
-      {/* Content */}
-      <div className="container" style={{ padding: "40px 24px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
-          <h1 style={{ fontSize: "1.75rem" }}>Your Agents</h1>
-          <Link href="/build?type=support_qa" className="btn btn-primary">
-            + Create Agent
-          </Link>
-        </div>
-
-        {loading && <div className="loading-spinner" />}
-
-        {!loading && agents.length === 0 && (
-          <div className="card" style={{ textAlign: "center", padding: 48 }}>
-            <p style={{ fontSize: "2rem", marginBottom: 12 }}>🤖</p>
-            <h3 style={{ marginBottom: 8 }}>No agents yet</h3>
-            <p style={{ color: "var(--text-secondary)", marginBottom: 24 }}>
-              Create your first AI agent to get started
-            </p>
+      {/* ── Main ───────────────────────────────────── */}
+      <main className="dashboard-main">
+        <div className="dashboard-header">
+          <h1>Dashboard</h1>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <Link href="/build?type=support_qa" className="btn btn-primary">
-              Create Support Agent
+              + New Agent
+            </Link>
+            <button onClick={handleLogout} className="btn btn-ghost" style={{ fontSize: "0.85rem" }}>
+              Log out
+            </button>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-label">Total Chats</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <div className="stat-value">{totalChats.toLocaleString()}</div>
+              <span className="stat-change">+12%</span>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Active Agents</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <div className="stat-value">{agents.length}</div>
+              <span className="stat-change">+{agents.length}</span>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Knowledge Items</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <div className="stat-value">{knowledgeItems || 0}</div>
+              <span className="stat-change">+2%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Agent List */}
+        {loading ? (
+          <div style={{ textAlign: "center", padding: 40 }}>
+            <div className="loading-spinner" />
+          </div>
+        ) : agents.length === 0 ? (
+          <div className="empty-state">
+            <div style={{ fontSize: "3rem", marginBottom: 8 }}>🤖</div>
+            <h3>No agents yet</h3>
+            <p>Create your first AI support agent to get started.</p>
+            <Link href="/build?type=support_qa" className="btn btn-primary">
+              Create Support Agent →
             </Link>
           </div>
-        )}
-
-        {!loading && agents.length > 0 && (
-          <div style={{ display: "grid", gap: 16 }}>
-            {agents.map((agent) => (
-              <div className="card" key={agent.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
-                    <h3 style={{ fontSize: "1.1rem" }}>{agent.name}</h3>
-                    <span
-                      style={{
-                        padding: "2px 8px",
-                        background: "rgba(124, 58, 237, 0.15)",
-                        borderRadius: 100,
-                        fontSize: "0.75rem",
-                        color: "var(--accent-primary)",
-                      }}
-                    >
-                      {TYPE_LABELS[agent.agent_type] || agent.agent_type}
-                    </span>
-                    <span
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: STATUS_COLORS[agent.status] || "var(--text-muted)",
-                      }}
-                    />
-                  </div>
-                  <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
-                    {agent.url}
-                  </p>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <Link href={agent.url} className="btn btn-secondary" style={{ padding: "8px 16px", fontSize: "0.85rem" }}>
-                    Open
-                  </Link>
-                  <button
-                    className="btn btn-ghost"
-                    style={{ padding: "8px 16px", fontSize: "0.85rem" }}
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}${agent.url}`);
-                    }}
-                  >
-                    Copy URL
-                  </button>
-                </div>
-              </div>
-            ))}
+        ) : (
+          <div className="agents-table">
+            <div className="agents-table-header">
+              <h3>My Agents</h3>
+              <a href="#" style={{ fontSize: "0.85rem", color: "var(--primary)" }}>View all</a>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Agent Name</th>
+                  <th>Status</th>
+                  <th>Type</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {agents.map((agent) => (
+                  <tr key={agent.id || agent.slug}>
+                    <td>
+                      <div className="agent-name-cell">
+                        <div className="agent-avatar">
+                          {agent.name?.charAt(0) || "A"}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600 }}>{agent.name}</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                            /a/{agent.slug}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`status-badge status-${agent.status}`}>
+                        <span className="status-dot" />
+                        {agent.status === "ready" ? "Live" : agent.status}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="agent-type-badge">
+                        {agent.agent_type === "support_qa" ? "💬 Support" : "📣 Marketing"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <Link href={`/a/${agent.slug}`} className="action-btn" title="Open">
+                          ↗
+                        </Link>
+                        <button className="action-btn" onClick={() => copyUrl(agent.slug)} title="Copy URL">
+                          📋
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
