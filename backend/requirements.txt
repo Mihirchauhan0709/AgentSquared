@@ -11,3 +11,4 @@ bcrypt==4.2.0
 PyJWT==2.9.0
 httpx>=0.28.1
 beautifulsoup4==4.12.3
+atproto>=0.0.44
